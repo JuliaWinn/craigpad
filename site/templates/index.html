@@ -7,8 +7,11 @@
   <h1>Title omfg</h1>
   <h2>Welcome to CraigPad Bitches!</h2>
   {% for item in items %}
-    {{item.url}}
-    {{item.image}}
+    <div class="image">
+      <a href="{{item.url}}">
+        {{item.image}}
+      </a>
+    </div>
     {{item.cost}}
   {% endfor %}
 

@@ -13,6 +13,7 @@ class BostonCragistlistSpider(CrawlSpider):
     allowed_domains = ['boston.craigslist.org']
     start_urls = ['http://boston.craigslist.org/search/fua?query=chest+of+drawers']
     print 'started'
+    
     rules = (
         Rule(SgmlLinkExtractor(allow=r'/[a-z]{3}/[a-z]{3}/.*\.html'), callback='get_image', follow=True),
         # looking for:
@@ -21,8 +22,7 @@ class BostonCragistlistSpider(CrawlSpider):
         Rule(SgmlLinkExtractor(allow=r'/search/fua\?query=.*'), callback='extract_links', follow=True),
     )
     
-    connection = pymongo.Connection()
-    destination = connection['craigslist']['items']
+    # destination.drop()
     
     def extract_links(self, response):
         print 'extracting links'
@@ -39,26 +39,33 @@ class BostonCragistlistSpider(CrawlSpider):
         if re_money:
             cost = re_money.group(1)
         else:
-            print '\n'
-            print title
+            cost = 0
         
         # check that it isn't a pottery barn scam
-        # if int(cost) > 500:
-        #     return
-        # else: 
-        #     re_location = re.search("\((.*)\)", title)
-        #     location = re_location.group(1)
-        # 
-        #     images = hxs.select('//img//@src').extract()
-        # 
-        #     new_page = {}
-        #     new_page['url'] = response.url
-        #     new_page['title'] = title
-        #     new_page['cost'] = '$' + str(cost)
-        #     new_page['location'] = re_location.group(1)
-        #     new_page['images'] = images
-            
-            
+        if int(cost) > 500:
+            pass
+        else: 
+            re_location = re.search("\((.*)\)", title)
+            location = re_location.group(1)
+        
+            images = hxs.select('//img//@src').extract()
+            if images:
+                new_page = {}
+                new_page['url'] = response.url
+                new_page['title'] = title
+                if cost == 0: cost = '????'
+                new_page['cost'] = '$' + str(cost)
+                if location: 
+                    new_page['location'] = location
+                new_page['images'] = images
+                
+                connection = pymongo.Connection()
+                
+                destination = connection['craigslist']['items']
+                # def save(self, comment, db, coll):
+                # x = connection[db][coll]
+                destination.save(new_page, safe=True)
+                # x.save(comment, safe=True)
         
         
         
